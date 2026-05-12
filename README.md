@@ -426,62 +426,58 @@ La implementación física del sistema conecta la FPGA Tang Nano 9K con el tecla
 
 **Figura 11.** Montaje físico del sistema con teclado hexadecimal, FPGA y displays de 7 segmentos.
 
-## 17. Ejercicios experimentales
-
-Los ejercicios experimentales se completan con las mediciones realizadas en laboratorio. En esta versión del informe se deja preparada la estructura para agregar los resultados cuando se finalicen las pruebas físicas correspondientes.
+## 17. Ejercicios 
 
 ### 17.1 Contadores sincrónicos 74LS163
 
-En este ejercicio se debe alambrar la conexión de dos contadores sincrónicos 74LS163 en cascada y generar la señal de reloj desde la FPGA. El objetivo es verificar el comportamiento del contador mediante el analizador lógico y analizar las señales de acarreo entre ambos circuitos integrados.
+¿Qué hace la salida RCO en un 74LS163?
 
-![Montaje de contadores 74LS163](doc/img/ejercicio_contadores_montaje.png)
+R/ La salida RCO (Ripple Carry Output) indica que el contador alcanzó su valor máximo (1111) y que las señales de habilitación se encuentran activas. Esta salida se utiliza para encadenar varios contadores y permitir que el siguiente avance cuando el primero complete su ciclo.
 
-**Figura 12.** Montaje experimental de los contadores sincrónicos 74LS163 en cascada.
+Explique por qué RCO y T están conectadas entre los dos contadores y explique cómo trabaja esta conexión.
 
-| Elemento medido o analizado | Resultado |
-|---|---|
-| Frecuencia de reloj generada desde la FPGA | `[completar]` |
-| Señal usada para disparo del analizador lógico | `[completar]` |
-| Tiempo de cambio luego del flanco positivo de reloj | `[completar]` |
-| Observación de la señal RCO | `[completar]` |
-| Presencia de fallas o glitches en RCO | `[completar]` |
+R/ La conexión entre RCO del primer contador y la entrada T (ENT) del segundo permite implementar un conteo en cascada. Cuando el primer contador completa sus 16 estados, la salida RCO genera un pulso que habilita el avance del segundo contador. De esta forma, el segundo contador únicamente incrementa su valor cuando el primero desborda, logrando así un contador de mayor cantidad de bits y una división de frecuencia de la señal original.
 
-![Captura del analizador lógico para contadores](doc/img/ejercicio_contadores_analizador.png)
+¿Cuál es la diferencia entre las entradas T y P del 74LS163?
 
-**Figura 13.** Captura del analizador lógico durante la prueba de los contadores sincrónicos.
+R/ Las entradas ENP y ENT son señales de habilitación del contador. Ambas deben estar en alto para permitir el conteo normal. Sin embargo, la diferencia principal es que ENT también habilita la generación de la señal RCO, mientras que ENP no afecta directamente dicha salida.
 
-La salida `RCO` se analiza como señal de acarreo del contador menos significativo hacia el contador más significativo. La explicación final de su funcionamiento, junto con la diferencia entre las entradas `T` y `P` o `ENT` y `ENP`, se completa con base en la medición y en la hoja de datos del circuito integrado utilizado.
+¿Cuánto toma, luego del flanco positivo de reloj, para que uno de los flip-flops cambie de estado?
+
+R/ El cambio de estado ocurre después del tiempo de propagación interno del flip-flop, el cual típicamente se encuentra en el rango aproximado de 10 ns a 20 ns según la hoja de datos del dispositivo.
+
+¿Importa cuál bit de salida se escoja? Explique.
+
+R/ Sí importa, ya que cada bit cambia con una frecuencia distinta. Aunque todos los flip-flops son sincronizados por el mismo reloj, las salidas representan divisiones diferentes de frecuencia. Por ejemplo, Qa cambia a la mitad de la frecuencia del reloj, mientras que Qd cambia a una dieciseisava parte de dicha frecuencia. Por ello, dependiendo del bit seleccionado, la señal observada tendrá una velocidad de cambio distinta.
+
+Use la opción de captura de fallas en el osciloscopio para localizar posibles fallas. Explique en qué casos es esperable hallar esta falla.
+
+R/ Las fallas o glitches pueden aparecer debido a diferencias en los tiempos de propagación internos de los flip-flops y la lógica combinacional. Estas transiciones breves suelen observarse cuando varias salidas cambian simultáneamente y la señal RCO conmuta entre alto y bajo. Debido a que los cambios no ocurren exactamente al mismo instante, pueden generarse pulsos espurios de corta duración.
 
 ### 17.2 Cerrojo Set-Reset con compuertas NAND
 
 En este ejercicio se debe construir un cerrojo Set-Reset utilizando compuertas NAND 74HC00. El circuito se prueba con señales de entrada `S` y `R`, y se verifica el comportamiento de las salidas `Q` y `QN` en función del estado del reloj.
 
-![Montaje del cerrojo SR](doc/img/ejercicio_sr_montaje.png)
+![Montaje del cerrojo SR](doc/img/Latch_SR_NAND.png)
 
-**Figura 14.** Montaje experimental del cerrojo SR construido con compuertas NAND.
+**Figura 12.** diagrama del cerrojo SR construido con compuertas NAND.
 
-| CLK | S | R | Q | QN | Descripción |
-|---|---|---|---|---|---|
-| `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` |
-| `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` |
-| `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` |
-| `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` | `[completar]` |
 
-![Captura del analizador lógico para cerrojo SR](doc/img/ejercicio_sr_analizador.png)
+![Captura del analizador lógico para cerrojo SR](doc/img/Tabla_verdad_Latch.png)
 
-**Figura 15.** Captura del analizador lógico durante la prueba del cerrojo SR.
+**Figura 13.** Tabla de verdad del SR_Latch.
 
-El análisis final debe explicar el funcionamiento del cerrojo, el efecto del reloj sobre las entradas `S` y `R`, y el comportamiento esperado cuando ambas entradas se mantienen activas al mismo tiempo.
+Funcionamiento del circuito
 
+El latch S-R sincronizado con reloj funciona mediante dos etapas principales. En la primera etapa, dos compuertas NAND reciben las señales de entrada Set (S), Reset (R) y Clock (CLK). Estas compuertas determinan cuándo las señales de control pueden afectar el estado interno del latch.
+
+En la segunda etapa, otras dos compuertas NAND realimentadas generan las salidas Q y Q̅. Gracias a esta realimentación cruzada, el circuito puede almacenar un estado binario incluso después de que las entradas cambien.
+
+Cuando CLK se encuentra en bajo, el circuito conserva su estado previo. En cambio, cuando CLK está en alto, las entradas S y R pueden modificar el valor almacenado. Si S se activa, la salida Q pasa a alto; si R se activa, Q pasa a bajo.
+
+La principal utilidad de este cerrojo consiste en el almacenamiento temporal de un bit de información y su complemento, siendo uno de los bloques fundamentales para sistemas secuenciales y memorias digitales.
 ## 18. Conclusiones
 
 El proyecto permitió implementar un sistema digital sincrónico completo en una FPGA, integrando lectura de señales externas, control secuencial, almacenamiento de datos, suma aritmética y visualización en displays de 7 segmentos. La división modular facilitó la verificación del sistema, ya que cada bloque pudo analizarse por separado antes de integrarse en el módulo superior.
 
 La FSM principal permitió controlar de forma clara el flujo de operación del sistema, diferenciando entre la captura del primer número, la captura del segundo número y la visualización del resultado. Además, el uso de registros y sincronización permitió adaptar las señales externas del teclado al dominio de reloj interno de la FPGA.
-
-La implementación de la suma en formato BCD resultó adecuada para este proyecto porque los datos ingresados y desplegados son decimales. Esto simplificó la conexión entre la lógica aritmética y el subsistema de visualización. Finalmente, el multiplexado permitió controlar cuatro displays de 7 segmentos utilizando una cantidad reducida de señales.
-
-Como mejora futura, se podría ampliar el control del sistema para manejar entradas de más dígitos, indicar explícitamente el estado de overflow y agregar una función de limpieza general mediante una tecla dedicada.
-La implementación de la suma en formato BCD resultó adecuada para este proyecto, ya que los datos ingresados y desplegados son decimales. Esto simplificó la conexión entre la lógica aritmética y el subsistema de visualización. Finalmente, el uso de multiplexado permitió controlar cuatro displays de 7 segmentos utilizando una cantidad reducida de señales.
-
-Como trabajo pendiente, se debe completar el informe con capturas reales de simulación, reporte de recursos, reporte de temporización y evidencia del montaje físico o pruebas en hardware.
