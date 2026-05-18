@@ -120,6 +120,35 @@ flowchart LR
 ```
 divider_stage representa una etapa de decisión del divisor. Internamente utiliza divider_row para intentar restar el divisor al residuo parcial, forzando accept_i en 1 para obtener el resultado de la resta. Luego, el acarreo final cout_o se utiliza como señal de decisión: si cout_o es 1, la resta fue válida y se acepta diff_o como nuevo residuo; si cout_o es 0, la resta no fue válida y se conserva el residuo anterior r_i. Esta misma señal se entrega como q_bit_o, correspondiente al bit del cociente generado por la etapa.
 
+Diagrama divider_comb 
+```mermaid
+flowchart TD
+    A["dividend_i de 6 bits"] --> S5["Etapa bit 5"]
+    B["divisor_i de 4 bits"] --> S5
+    S5 --> Q5["quotient bit 5"]
+    S5 --> S4["Etapa bit 4"]
+
+    B --> S4
+    S4 --> Q4["quotient bit 4"]
+    S4 --> S3["Etapa bit 3"]
+
+    B --> S3
+    S3 --> Q3["quotient bit 3"]
+    S3 --> S2["Etapa bit 2"]
+
+    B --> S2
+    S2 --> Q2["quotient bit 2"]
+    S2 --> S1["Etapa bit 1"]
+
+    B --> S1
+    S1 --> Q1["quotient bit 1"]
+    S1 --> S0["Etapa bit 0"]
+
+    B --> S0
+    S0 --> Q0["quotient bit 0"]
+    S0 --> R["remainder_o"]
+```
+
 ## Apendices:
 ### Apendice 1:
 texto, imágen, etc
