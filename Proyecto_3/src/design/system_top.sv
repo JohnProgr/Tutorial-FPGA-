@@ -16,9 +16,6 @@ module system_top #(
     output logic [3:0] anodo
 );
 
-    logic done_signal;
-    logic div_zero_signal;
-
     logic [3:0] key_value;
     logic       key_valid;
 
@@ -30,6 +27,13 @@ module system_top #(
     logic [3:0] remainder;
 
     logic       select_reg;
+
+    logic [5:0] input_preview;
+    logic       entering_divisor;
+
+    logic       result_ready;
+    logic       done_signal;
+    logic       div_zero_signal;
 
     keypad_reader #(
         .SCAN_DELAY(KEYPAD_SCAN_DELAY),
@@ -43,27 +47,16 @@ module system_top #(
         .key_valid (key_valid)
     );
 
-    // Tecla D cambia entre cociente y residuo.
-    // select_reg = 0 -> cociente
-    // select_reg = 1 -> residuo
-    always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            select_reg <= 1'b0;
-        end else begin
-            if (key_valid && key_value == 4'hD) begin
-                select_reg <= ~select_reg;
-            end
-        end
-    end
-
     input_controller input_inst (
-        .clk         (clk),
-        .rst_n       (rst_n),
-        .key_value_i (key_value),
-        .key_valid_i (key_valid),
-        .dividend_o  (dividend),
-        .divisor_o   (divisor),
-        .valid_o     (input_valid)
+        .clk                (clk),
+        .rst_n              (rst_n),
+        .key_value_i        (key_value),
+        .key_valid_i        (key_valid),
+        .dividend_o         (dividend),
+        .divisor_o          (divisor),
+        .valid_o            (input_valid),
+        .current_value_o    (input_preview),
+        .entering_divisor_o (entering_divisor)
     );
 
     divider_core divider_inst (
@@ -78,14 +71,46 @@ module system_top #(
         .done_o      (done_signal)
     );
 
+    // Tecla D cambia entre cociente y residuo,
+    // pero solo cuando ya hay resultado.
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            select_reg <= 1'b0;
+        end else begin
+            if (key_valid && key_value == 4'hD && result_ready) begin
+                select_reg <= ~select_reg;
+            end
+        end
+    end
+
+    // Controla si el display muestra entrada parcial o resultado final.
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            result_ready <= 1'b0;
+        end else begin
+            if (key_valid && key_value == 4'hE) begin
+                // * borra la entrada y vuelve a mostrar 00.
+                result_ready <= 1'b0;
+            end else if (key_valid && key_value <= 4'd9) begin
+                // Al digitar un número nuevo, mostrar la entrada parcial.
+                result_ready <= 1'b0;
+            end else if (done_signal) begin
+                // Cuando la división termina, mostrar resultado.
+                result_ready <= 1'b1;
+            end
+        end
+    end
+
     display_result_controller display_inst (
-        .clk         (clk),
-        .rst_n       (rst_n),
-        .quotient_i  (quotient),
-        .remainder_i (remainder),
-        .select_i    (select_reg),
-        .seven       (seven),
-        .anodo       (anodo)
+        .clk             (clk),
+        .rst_n           (rst_n),
+        .quotient_i      (quotient),
+        .remainder_i     (remainder),
+        .select_i        (select_reg),
+        .current_value_i (input_preview),
+        .show_input_i    (!result_ready),
+        .seven           (seven),
+        .anodo           (anodo)
     );
 
 endmodule

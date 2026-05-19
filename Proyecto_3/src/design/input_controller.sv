@@ -9,7 +9,10 @@ module input_controller (
 
     output logic [5:0] dividend_o,
     output logic [3:0] divisor_o,
-    output logic       valid_o
+    output logic       valid_o,
+
+    output logic [5:0] current_value_o,
+    output logic       entering_divisor_o
 );
 
     typedef enum logic [1:0] {
@@ -32,6 +35,12 @@ module input_controller (
     assign is_digit   = (key_value_i <= 4'd9);
     assign is_confirm = (key_value_i == 4'hF); // #
     assign is_clear   = (key_value_i == 4'hE); // *
+
+    assign entering_divisor_o = (state_reg == WAIT_DIVISOR);
+
+    assign current_value_o = (state_reg == WAIT_DIVIDEND)
+                            ? dividend_temp[5:0]
+                            : {1'b0, divisor_temp};
 
     always_comb begin
         dividend_next = dividend_temp;
@@ -72,6 +81,7 @@ module input_controller (
                     state_reg     <= WAIT_DIVIDEND;
                     dividend_temp <= 7'd0;
                     divisor_temp  <= 5'd0;
+
                     dividend_o    <= 6'd0;
                     divisor_o     <= 4'd0;
                     valid_o       <= 1'b0;
@@ -104,7 +114,9 @@ module input_controller (
                         end
 
                         default: begin
-                            state_reg <= WAIT_DIVIDEND;
+                            state_reg     <= WAIT_DIVIDEND;
+                            dividend_temp <= 7'd0;
+                            divisor_temp  <= 5'd0;
                         end
                     endcase
                 end
